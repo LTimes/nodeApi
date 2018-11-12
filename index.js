@@ -51,8 +51,9 @@ app.use(bodyParser({
 
 
 // 路由
-app.use(require('./routers/signup.js').routes())
-app.use(require('./routers/articles.js').routes())
+app.use(require('./routers/register.js').routes())  // 注册
+app.use(require('./routers/login.js').routes())     // 登录
+app.use(require('./routers/post.js').routes())      // 文章
 
 
 app.listen(`${ config.PORT }`)
