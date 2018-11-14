@@ -10,11 +10,21 @@ const views = require('koa-views') // 模板呈现中间件
 const koaStatic = require('koa-static') // 静态资源加载中间件
 const staticCache = require('koa-static-cache') //文件缓存
 const cors = require('koa2-cors')  // 设置跨域
-const config = require('./config/config.js');
+const config = require('./config/config.js')
+const jwtKoa = require('koa-jwt')
+const tokenError = require('./middlewares/tokenError')
 
 const app = new Koa()
 
 app.use(cors());
+
+app.use(tokenError())
+
+app.use(jwtKoa({
+    secret: config.tokenSecret
+}).unless({
+    path: [/^\/login/ ,/^\/register/]
+}))
 
 // session 存储配置
 const sessionConfig = {

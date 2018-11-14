@@ -10,7 +10,8 @@ const config = {
         PORT: '3306',
         USERNAME: 'root',
         PASSWORD: '123456'
-    }
+    },
+    tokenSecret: 'test'
 }
 
 module.exports = config;
