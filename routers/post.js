@@ -45,23 +45,15 @@ router.get('/article', async (ctx, next) => {
 // 新增文章
 router.post('/addArticle', async (ctx, next) => {
   console.log(ctx.session)
+  
   let title = ctx.request.body.title,
     mds = ctx.request.body.md,
-    content = ctx.request.body.content || 'halo',
-    id = ctx.session.id || 4,
-    name = ctx.request.body.name,
+    id = ctx.session.id || 1,
+    name = ctx.session.name || 'ly',
     time = moment().format('YYYY-MM-DD HH:mm:ss'),
-    avator = ctx.request.body.avator,
-    label = ctx.request.body.label,
-    // 现在使用markdown不需要单独转义
-    // newContent = content.replace(/[<">']/g, (target) => {
-    //   return {
-    //     '<': '&lt;',
-    //     '"': '&quot;',
-    //     '>': '&gt;',
-    //     "'": '&#39;'
-    //   } [target]
-    // }),
+    avator = '',
+    label = JSON.stringify(ctx.request.body.label),
+    pv = 0,
     newTitle = title.replace(/[<">']/g, (target) => {
       return {
         '<': '&lt;',
@@ -70,18 +62,49 @@ router.post('/addArticle', async (ctx, next) => {
         "'": '&#39;'
       } [target]
     });
-
-  // await userModel.findUserData(ctx.session.user)
-  //   .then(res => {
-  //     console.log(res[0]['avator'])
-  //     avator = res[0]['avator']
-  //   })
-  await userModel.insertPost([name, newTitle,content, md.render(mds), id, time, avator, label])
-    .then(() => {
-      ctx.body = true
-    }).catch(() => {
-      ctx.body = false
+    if (!title) {
+      ctx.body = {
+        success: false,
+        message: '请填写文章标题'
+      }
+      return
+    }
+    if (!label) {
+      ctx.body = {
+        success: false,
+        message: '请选择标签'
+      }
+      return
+    }
+    if (!mds) {
+      ctx.body = {
+        success: false,
+        message: '请填写文章内容'
+      }
+      return
+    }
+    console.log(ctx.session, 'ctx.session2============')
+  await userModel.findUserData(ctx.session.user)
+    .then(res => {
+      avator = res[0]['avator']
+    }).catch(err => {
+      console.log(err)
     })
+  await userModel.insertPost([id, avator, name, newTitle, time, pv, md.render(mds), label])
+    .then(() => {
+      ctx.body = {
+        success: true,
+        message: '发布成功！'
+      }
+    }).catch(() => {
+      ctx.body = {
+        success: false,
+        message: '发布失败'
+      }
+    })
+
+    await next()
 })
+
 
 module.exports = router;

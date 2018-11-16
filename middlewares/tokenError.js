@@ -34,7 +34,7 @@ module.exports = function () {
         ctx.status = 404;
         ctx.body = {
           success: false,
-          message: '404'
+          message: '404,出错了'
         }
       }
     }
