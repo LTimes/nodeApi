@@ -2,54 +2,43 @@ const router = require('koa-router')()
 const userModel = require('../lib/mysql.js');
 const moment = require('moment');
 const md = require('markdown-it')();
+const querystring = require('querystring');
 
 router.get('/article', async(ctx, next) => {
-    await next()
-    let res,
-        postLength,
-        name = decodeURIComponent(ctx.request.querystring.split('=')[1]);
-    if (ctx.request.querystring) {
-        await userModel.findDataByUser(name).then(result => {
-            postLength = result.length
+    let value = {};
+    let params = querystring.parse(ctx.request.url.split('?')[1]);
+    value.search = params.search;
+        value.page = params.page;
+        value.pageSize = params.pageSize;
+    if (value.page && value.pageSize) {
+        await userModel.findAllPost(value).then(res => {
+            ctx.body = {
+                data: res,
+                success: true
+            }
         })
-        await userModel.findPostByUserPage(name, 1).then(result => {
-            res = result
-        })
-        ctx.body = {
-            session: ctx.session,
-            data: res,
-            postLength: Math.ceil(postLength / 10),
-            total: postLength,
-            success: true
-        }
+        
+        
     } else {
-        await userModel.findPostByPage(1)
-            .then(result => {
-                res = result
-            })
-        await userModel.findAllPost()
-            .then(result => {
-                postsLength = result.length
-            })
+        
         ctx.body = {
-            session: ctx.session,
-            data: res,
-            postLength: Math.ceil(postLength / 10),
-            total: postLength,
-            success: true
+            data: '缺少参数',
+            success: false
         }
     }
+
+    await next()
 
 })
 
 // 新增文章
 router.post('/addArticle', async(ctx, next) => {
-    console.log(ctx.session, '新增的post')
+    //console.log(ctx.session, '新增的post')
 
     let title = ctx.request.body.title,
         mds = ctx.request.body.md,
-        id = ctx.session.id || 1,
-        name = ctx.session.name || 'ly',
+        uid = ctx.request.body.userId,
+        name = '',
         time = moment().format('YYYY-MM-DD HH:mm:ss'),
         avator = '',
         label = JSON.stringify(ctx.request.body.label),
@@ -83,13 +72,15 @@ router.post('/addArticle', async(ctx, next) => {
         }
         return
     }
-    await userModel.findUserData(ctx.session.user)
+    await userModel.findUserIdData(uid)
         .then(res => {
+            console.log(res)
             avator = res[0]['avator']
+            name = res[0]['name']
         }).catch(err => {
             console.log(err)
         })
-    await userModel.insertPost([id, avator, name, newTitle, time, pv, md.render(mds), label])
+    await userModel.insertPost([uid, avator, name, newTitle, time, pv, md.render(mds), label])
         .then(() => {
             ctx.body = {
                 success: true,
