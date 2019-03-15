@@ -23,7 +23,7 @@ app.use(tokenError())
 app.use(jwtKoa({
     secret: config.tokenSecret
 }).unless({
-    path: [/^\/login/, /^\/register/]
+    path: [/^\/login/, /^\/register/] // , /^\/article/
 }))
 
 // session 存储配置
