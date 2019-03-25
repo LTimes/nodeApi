@@ -5,26 +5,34 @@ const md = require('markdown-it')();
 const querystring = require('querystring');
 
 // 查询文章
-router.get('/article', async(ctx, next) => {
+router.get('/article', async (ctx, next) => {
     let value = {};
     let params = querystring.parse(ctx.request.url.split('?')[1]);
     value.search = params.search;
-        value.page = params.page;
-        value.pageSize = params.pageSize;
+    value.page = params.page;
+    value.pageSize = params.pageSize;
     if (value.page && value.pageSize) {
+        console.log(value)
+        var totalCount = 0;
+        let data = [];
         await userModel.findAllPost(value).then(res => {
             res.forEach(ele => {
                 ele.label = JSON.parse(ele.label)
             });
-            ctx.body = {
-                data: res,
-                success: true
-            }
+            data = res;
         })
-        
-        
+        await userModel.findPostTotal().then(result => {
+            totalCount = result[0].total;
+        })
+        ctx.body = {
+            data: data,
+            totalCount: totalCount,
+            success: true
+        };
+
+
     } else {
-        
+
         ctx.body = {
             data: '缺少参数',
             success: false
@@ -36,7 +44,7 @@ router.get('/article', async(ctx, next) => {
 })
 
 // 新增文章
-router.post('/addArticle', async(ctx, next) => {
+router.post('/addArticle', async (ctx, next) => {
     //console.log(ctx.session, '新增的post')
 
     let title = ctx.request.body.title,
@@ -53,7 +61,7 @@ router.post('/addArticle', async(ctx, next) => {
                 '"': '&quot;',
                 '>': '&gt;',
                 "'": '&#39;'
-            }[target]
+            } [target]
         });
     if (!title) {
         ctx.body = {
@@ -101,7 +109,7 @@ router.post('/addArticle', async(ctx, next) => {
 })
 
 // 更新文章
-router.post('/editArticle', async(ctx, next) => {
+router.post('/editArticle', async (ctx, next) => {
     let postid = ctx.request.body.postId,
         title = ctx.request.body.title,
         mds = ctx.request.body.md,
@@ -156,7 +164,7 @@ router.post('/editArticle', async(ctx, next) => {
 })
 
 // 删除文章
-router.post('/deleteArticle', async(ctx, next) => {
+router.post('/deleteArticle', async (ctx, next) => {
     let postId = ctx.request.body.postId;
     if (postId) {
         await userModel.deletePost(postId).then(res => {
@@ -182,7 +190,7 @@ router.post('/deleteArticle', async(ctx, next) => {
 })
 
 // 获取文章详情
-router.post('/articleDetail', async(ctx, next) => {
+router.post('/articleDetail', async (ctx, next) => {
     let postId = ctx.request.body.postId;
     let type = ctx.request.body.type;
     if (postId) {
